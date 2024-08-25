@@ -1,0 +1,1146 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>HC ORDER MANAGEMENT SYSTEM</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.onesignal.com/sdks/OneSignalSDK.js" async=""></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f8f9fa;
+        }
+    
+        .section {
+            display: none;
+            margin-top: -20px;
+            padding: 20px;
+            border-radius: 8px;
+            background-color: #ffffff;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+    
+        .active {
+            display: block;
+        }
+    
+        .nav-link.active {
+            font-weight: bold;
+            color: #007bff;
+        }
+    
+        .nav-link {
+            float: left;
+            margin-right: -6px;
+            margin-bottom: -10px;
+        }
+
+        .nav-link:last-child {
+            margin-right: 0PX;
+        }
+    
+        .nav-link:hover {
+            color: #0056b3;
+        }
+    
+        #orderSummary {
+            margin-top: 15px;
+            border-top: 2px solid #007bff;
+            padding-top: 15px;
+        }
+    
+        .form-group {
+            margin-bottom: 15px;
+        }
+    
+        .navbar {
+            padding: 10px;
+            background-color: #007bff;
+            color: rgb(0, 0, 0);
+        }
+    
+        .navbar-brand {
+            font-size: 1.5rem;
+            color: rgb(0, 0, 0);
+        }
+    
+        .nav-link {
+            font-size: 1.3rem;
+            color: rgb(0, 0, 0);
+        }
+    
+        .btn {
+            font-size: 1rem;
+            padding: 8px 15px;
+            border-radius: 5px;
+            transition: background-color 0.3s;
+        }
+    
+        .btn-primary {
+            background-color: #007bff;
+            border: none;
+        }
+    
+        .btn-primary:hover {
+            background-color: #0056b3;
+        }
+    
+        .btn-success {
+            background-color: #28a745;
+            border: none;
+        }
+    
+        .btn-success:hover {
+            background-color: #218838;
+        }
+    
+        .table {
+            font-size: 0.9rem;
+            width: 100%;
+            border-collapse: collapse;
+        }
+    
+        .table th, .table td {
+            padding: 10px;
+            border: 1px solid #dee2e6;
+        }
+    
+        .table th {
+            background-color: #007bff;
+            color: white;
+        }
+    
+        .table tbody tr:hover {
+            background-color: #f1f1f1;
+        }
+    
+        @media (min-width: 768px) {
+            body::before {
+                content: "This application is designed for mobile devices only. Please access it on a mobile device or use a mobile device emulator.";
+                display: block;
+                padding: 20px;
+                text-align: center;
+                font-size: 18px;
+                color: #dc3545;
+            }
+    
+            .container {
+                display: none;
+            }
+        }
+        .navbar-brand img {
+            border-radius: 50%;
+            overflow: hidden;
+        }
+        .slide-menu {
+            height: 100%;
+            width: 0;
+            position: fixed;
+            z-index: 1000;
+            top: 0;
+            left: 0;
+            background-color: #111;
+            overflow-x: hidden;
+            transition: 0.5s;
+            padding-top: 60px;
+        }
+
+        .slide-menu a {
+            padding: 8px 8px 8px 32px;
+            text-decoration: none;
+            font-size: 18px;
+            color: #818181;
+            display: block;
+            transition: 0.3s;
+        }
+
+        .slide-menu a:hover {
+            color: #f1f1f1;
+        }
+
+        .slide-menu .close-btn {
+            position: absolute;
+            top: 0;
+            right: 25px;
+            font-size: 36px;
+            margin-left: 50px;
+        }
+
+        #menuToggle {
+            font-size: 24px;
+            cursor: pointer;
+            background-color: transparent;
+            border: none;
+            color: #000;
+            padding: 0;
+            margin-right: 15px;
+        }
+
+        .section {
+            display: none;
+            padding: 20px;
+            border-radius: 8px;
+            background-color: #ffffff;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        .section.active {
+            display: block;
+        }
+        
+    #partySearch {
+        width: 100%;
+        padding: 10px;
+        font-size: 16px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+    }
+
+    #partyList {
+        position: absolute;
+        width: calc(100% - 30px);
+        max-height: 200px;
+        overflow-y: auto;
+        background-color: #fff;
+        border: 1px solid #ddd;
+        border-top: none;
+        border-radius: 0 0 4px 4px;
+        z-index: 1000;
+        display: none;
+    }
+
+    #partyList a {
+        padding: 10px;
+        text-decoration: none;
+        display: block;
+        color: #333;
+    }
+
+    #partyList a:hover {
+        background-color: #f1f1f1;
+    }
+    .section h4 {
+  text-align: center;
+  font-weight: 900;
+}
+#homeScreen {
+        text-align: center;
+        padding: 100px 0px;
+        width: 100%; /* Adjust container width if needed */
+        max-width: 800px; 
+    }
+
+    #homeScreen h3 {
+        font-size: 1.8rem;
+        margin-bottom: 20px;
+        font-weight: bold; /* Make text bold */
+    }
+
+    .text-effect-wrapper {
+        position: relative;
+        overflow: hidden;
+        display: inline-block;
+        width: 200px;
+    }
+
+    .text-effect-wrapper::before {
+        content: "";
+        position: absolute;
+        top: -100%;
+        left: -100%;
+        right: -100%;
+        bottom: -100%;
+        background: 
+            radial-gradient(circle, white, transparent 25%) 0 0/25% 25%, 
+            radial-gradient(circle, white, transparent 25%) 50% 50%/12.5% 12.5%;
+        mix-blend-mode: color-dodge;
+        animation: shimmer 5s infinite linear;
+    }
+
+    @keyframes shimmer {
+        to {
+            transform: translate(50%, 50%);
+        }
+    }
+
+    .hc-text {
+  font-size: 8rem;
+  font-weight: bold;
+  font-style: italic;
+  font-family: 'Dancing Script', cursive;
+  background-image: linear-gradient(to right, #8B0000, #0000FF);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  overflow: hidden; /* Added line */
+}
+#master {
+  text-align: center; /* Center the buttons horizontally */
+}
+
+    #homeScreen h4 {
+        font-size: 1.8rem;
+        margin-top: 20px;
+        font-weight: bold;
+    }
+    .password-input {
+            -webkit-text-security: disc;
+            -moz-text-security: disc;
+            -text-security: disc;
+        }
+
+
+    </style>
+</head>
+<body>
+    <div class="modal fade" id="usernameModal" tabindex="-1" aria-labelledby="usernameModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title" id="usernameModalLabel">Welcome!</h5>
+            </div>
+            <div class="modal-body">
+              <p>Please enter your username:</p>
+              <input type="text" id="usernameInput" class="form-control" required>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-primary" id="saveUsername">Save</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+    <div id="offlineAlert" class="alert alert-warning" style="display: none;" role="alert">
+        You are currently offline. Some features may be limited.
+    </div>
+    <nav class="navbar navbar-expand navbar-light bg-light">
+        <div class="container-fluid">
+            <button id="menuToggle" class="btn btn-link">☰</button>
+            <div class="navbar-nav">
+                <a class="nav-link active" href="#" data-section="orders">Orders</a>
+                <a class="nav-link" href="#" data-section="pendingOrders">Pending</a>
+                <a class="nav-link" href="#" data-section="billing">Billing</a>
+                <a class="nav-link" href="#" data-section="sentOrders">Sent</a>
+            </div>
+        </div>
+    </nav >
+    <div id="homeScreen" class="section active">
+        <h3>Hello <span id="userNameDisplay"></span></h3>
+        <div class="text-effect-wrapper">
+            <h1 class="hc-text">HC</h1>
+        </div>
+        <h4>Hreenkar Creation</h4>
+    </div>
+    <div id="slideMenu" class="slide-menu">
+        <a href="#" class="close-btn">&times;</a>
+        <a href="#" data-section="backupdetails">Backup Details</a>
+        <a href="#" data-section="backupRestore">Backup & Restore</a>
+        <a href="#" data-section="xlsExport">XLS Export</a>
+        <a href="#" data-section="deletedOrders">Deleted Orders</a>
+        <a href="#" data-section="activityLogs">Activity Logs</a>
+        <a href="#" data-section="master">Master</a>
+        <a href="#" data-section="userManagement">User Management</a>
+    </div>
+    <div id="backupdetails" class="section">
+        <h4>Backup Details</h4>
+        <p>Backup Details functionality will be implemented here.</p>
+    </div>
+    <div id="backupRestore" class="section">
+        <h4>Backup & Restore</h4>
+        <p>Backup and restore functionality will be implemented here.</p>
+    </div>
+    
+    <div id="xlsExport" class="section">
+        <h4>XLS Export</h4>
+        <p>XLS export functionality will be implemented here.</p>
+    </div>
+    
+    <div id="deletedOrders" class="section">
+        <h4>Deleted Orders</h4>
+        <p>Deleted orders will be displayed here.</p>
+    </div>
+    
+    <div id="activityLogs" class="section">
+        <h4>Activity Logs</h4>
+        <div id="logsList"></div>
+    </div>
+    <div id="master" class="section">
+        <h4>Master</h4>
+        <button class="btn btn-primary" id="partyMasterBtn">Party Master</button>
+        <button class="btn btn-primary" id="itemMasterBtn">Item Master</button>
+    </div>
+    <div id="userManagement" class="section">
+        <h4>User Management</h4>
+        <button class="btn btn-primary" id="usersBtn">Users</button>
+        <button class="btn btn-primary" id="approvalRequestsBtn">Approval Requests</button>
+    </div>
+    
+    <div id="users" class="section">
+        <h4>Users</h4>
+        <table class="table table-sm">
+            <thead>
+                <tr>
+                    <th>Username</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody id="usersBody"></tbody>
+        </table>
+    </div>
+    
+    <div id="approvalRequests" class="section">
+        <h4>Approval Requests</h4>
+        <table class="table table-sm">
+            <thead>
+                <tr>
+                    <th>Username</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody id="approvalRequestsBody"></tbody>
+        </table>
+    </div>
+    
+    <div id="partyMaster" class="section">
+        <h4>Party Master</h4>
+        <table class="table table-sm">
+            <thead>
+                <tr>
+                    <th>Party Name</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody id="partyMasterBody"></tbody>
+        </table>
+    </div>
+    <div id="orders" class="section">
+        <h4>Orders</h4>
+        <div class="form-group">
+            <input type="text" class="form-control" id="partySearch" placeholder="Search party name...">
+            <div id="partyList" class="list-group" style="display: none;"></div>
+        </div>
+    <div class="container mt-2">
+        <!-- Pending Orders Section -->
+        <div id="pendingOrders" class="section">
+            <h4>Pending Orders</h4>
+            <input type="text" class="form-control form-control-sm mb-2" id="pendingOrderSearch" placeholder="Search orders...">
+            <table class="table table-sm">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Party</th>
+                        <th>Items</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="pendingOrdersBody"></tbody>
+            </table>
+        </div>
+
+        <!-- Billing Section -->
+        <div id="billing" class="section">
+            <h4>Billing</h4>
+            <div id="billingParties"></div>
+        </div>
+
+        <!-- Sent Orders Section -->
+        <div id="sentOrders" class="section">
+            <h4>Sent Orders</h4>
+            <table class="table table-sm">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Party</th>
+                        <th>Items</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody id="sentOrdersBody"></tbody>
+            </table>
+        </div>
+    </div>
+    
+    <script>
+        // Place this code at the beginning of your script section, outside any event listeners
+
+let username = null;
+
+// Function to log activity
+function logActivity(action, username) {
+    const now = new Date();
+    const activityLog = {
+        action: action,
+        username: username,
+        timestamp: now.toISOString(),
+        date: now.toLocaleDateString(),
+        time: now.toLocaleTimeString()
+    };
+    firebase.database().ref('activityLogs').push(activityLog);
+}
+
+        //orders section
+        //PARTY NAME
+        document.addEventListener('DOMContentLoaded', function() {
+    // Initialize Firebase
+    const firebaseConfig = {
+        apiKey: "AIzaSyBRV-i_70Xdk86bNuQQ43jiYkRNCXGvvyo",
+        authDomain: "hcoms-221aa.firebaseapp.com",
+        databaseURL: "https://hcoms-221aa-default-rtdb.firebaseio.com",
+        projectId: "hcoms-221aa",
+        storageBucket: "hcoms-221aa.appspot.com",
+        messagingSenderId: "817694176734",
+        appId: "1:817694176734:web:176bf69333bd7119d3194f",
+        measurementId: "G-JB143EY71N"
+    };
+    firebase.initializeApp(firebaseConfig);
+
+    var OneSignal = window.OneSignal || [];
+  OneSignal.push(function() {
+    OneSignal.init({
+      appId: "cd6cdb2c-db15-48fb-8cb3-495e6cac92c1",
+    });
+  });
+    
+    function showSection(sectionId) {
+        document.querySelectorAll('.section').forEach(section => section.classList.remove('active'));
+        document.getElementById(sectionId).classList.add('active');
+
+        // Hide home screen when other sections are clicked
+        if (sectionId !== 'homeScreen') {
+            document.getElementById('homeScreen').classList.remove('active');
+        }
+    }
+
+    // Show home screen by default and display username
+    showSection('homeScreen');
+    const userNameDisplay = document.getElementById('userNameDisplay');
+    userNameDisplay.textContent = username || 'User';
+
+    // Check if user exists in the database
+    function checkUserStatus() {
+        return new Promise((resolve, reject) => {
+            const storedUsername = localStorage.getItem('hcUsername');
+            if (storedUsername) {
+                firebase.database().ref('users').once('value', (snapshot) => {
+                    const users = snapshot.val();
+                    if (users && Object.values(users).includes(storedUsername)) {
+                        username = storedUsername;
+                        document.getElementById('userNameDisplay').textContent = username;
+                        console.log('Welcome back, ' + username);
+                        resolve('active');
+                    } else {
+                        firebase.database().ref('approvalRequests').once('value', (snapshot) => {
+                            const requests = snapshot.val();
+                            if (requests && Object.values(requests).includes(storedUsername)) {
+                                resolve('pending');
+                            } else {
+                                localStorage.removeItem('hcUsername');
+                                resolve('new');
+                            }
+                        });
+                    }
+                });
+            } else {
+                resolve('new');
+            }
+        });
+    }
+
+    function registerUser() {
+    let usernameModal = new bootstrap.Modal(document.getElementById('usernameModal'), {
+        backdrop: 'static',
+        keyboard: false
+    });
+    usernameModal.show();
+    
+    document.getElementById('saveUsername').addEventListener('click', function() {
+        let inputUsername = document.getElementById('usernameInput').value.trim();
+        if (inputUsername) {
+            checkDuplicateUsername(inputUsername).then(isDuplicate => {
+                if (isDuplicate) {
+                    alert('This username already exists. Please choose a different one.');
+                } else {
+                    firebase.database().ref('approvalRequests').push(inputUsername).then(() => {
+                        usernameModal.hide();
+                        localStorage.setItem('hcUsername', inputUsername);
+                        logActivity('New user registration request', inputUsername);
+                        alert('Your registration request has been submitted. Please wait for approval.');
+                        location.reload();
+                    });
+                }
+            });
+        } else {
+            alert('Please enter a valid username.');
+        }
+    });
+}
+
+function checkDuplicateUsername(newUsername) {
+    return new Promise((resolve, reject) => {
+        firebase.database().ref('users').once('value', (snapshot) => {
+            const users = snapshot.val();
+            if (users) {
+                const isDuplicate = Object.values(users).some(username => 
+                    username.toLowerCase() === newUsername.toLowerCase()
+                );
+                resolve(isDuplicate);
+            } else {
+                resolve(false);
+            }
+        }).catch(error => {
+            console.error("Error checking for duplicate username:", error);
+            reject(error);
+        });
+    });
+}
+
+    checkUserStatus().then((status) => {
+        switch(status) {
+            case 'active':
+                // User is active, allow access to the application
+                break;
+            case 'pending':
+                alert('Your registration is pending approval. Please wait.');
+                document.body.innerHTML = '<h1>Registration Pending</h1><p>Please wait for your registration to be approved.</p>';
+                break;
+            case 'new':
+                registerUser();
+                break;
+        }
+    });
+                
+
+
+// Modify event listeners for nav links and slide menu items
+document.querySelectorAll('.nav-link, #slideMenu a[data-section]').forEach(link => {
+    link.addEventListener('click', function(e) {
+        e.preventDefault();
+        const sectionId = this.getAttribute('data-section');
+        showSection(sectionId);
+        
+        // Update active state for nav links
+        document.querySelectorAll('.nav-link').forEach(navLink => navLink.classList.remove('active'));
+        if (this.classList.contains('nav-link')) {
+            this.classList.add('active');
+        }
+
+        // Close slide menu if it's open
+        slideMenu.style.width = '0';
+    });
+});
+    let parties = ["PARTY A", "PARTY B", "PARTY C", "XYLO"];
+    const partySearch = document.getElementById('partySearch');
+    const partyList = document.getElementById('partyList');
+
+    // Function to sort parties alphabetically
+    function sortParties() {
+        parties.sort((a, b) => a.localeCompare(b, undefined, {sensitivity: 'base'}));
+    }
+
+    // Load parties from Firebase
+    firebase.database().ref('parties').once('value', (snapshot) => {
+        const firebaseParties = snapshot.val();
+        if (firebaseParties) {
+            parties = parties.concat(Object.values(firebaseParties));
+            parties = [...new Set(parties)]; // Remove duplicates
+            sortParties(); // Sort the combined list
+        }
+    });
+
+    function showParties(filter = '') {
+        partyList.innerHTML = '';
+        const filteredParties = parties.filter(party => 
+            party.toLowerCase().includes(filter.toLowerCase())
+        );
+
+        filteredParties.forEach(party => {
+            const item = document.createElement('a');
+            item.classList.add('list-group-item', 'list-group-item-action');
+            item.textContent = party;
+            item.href = '#';
+            item.addEventListener('click', function(e) {
+                e.preventDefault();
+                partySearch.value = party;
+                partyList.style.display = 'none';
+            });
+            partyList.appendChild(item);
+        });
+
+        if (filteredParties.length === 0 && filter !== '') {
+            const addNewItem = document.createElement('a');
+            addNewItem.classList.add('list-group-item', 'list-group-item-action');
+            addNewItem.textContent = `Add "${filter}" as a new party`;
+            addNewItem.href = '#';
+            addNewItem.addEventListener('click', function(e) {
+                e.preventDefault();
+                addNewParty(filter);
+            });
+            partyList.appendChild(addNewItem);
+        }
+
+        partyList.style.display = 'block';
+    }
+
+    function addNewParty(partyName) {
+    if (!parties.includes(partyName)) {
+        parties.push(partyName);
+        sortParties();
+        firebase.database().ref('parties').set(parties).then(() => {
+            console.log(`Added new party: ${partyName}`);
+            logActivity('Created new party', username, null, partyName);
+            
+            // Send notification using OneSignal
+            sendOneSignalNotification(partyName);
+        });
+    }
+    partySearch.value = partyName;
+    partyList.style.display = 'none';
+}
+
+OneSignal.push(function() {
+    OneSignal.showNativePrompt();
+});
+
+function sendOneSignalNotification(partyName) {
+    OneSignal.push(function() {
+        OneSignal.sendSelfNotification(
+            "New Party Added", // Title
+            `${username} added a new party: ${partyName}`, // Message
+            
+            
+        );
+    });
+}
+function sendOneSignalNotificationToAll(partyName) {
+    const oneSignalAppId = "cd6cdb2c-db15-48fb-8cb3-495e6cac92c1";
+    const oneSignalApiKey = "Y2RhYTVmMWQtMGU4Yi00ZTlhLTg2MzAtNzc3NjhhYzhiMTcz";
+
+    const notificationData = {
+        app_id: oneSignalAppId,
+        included_segments: ["All"],
+        contents: {"en": `${username} added a new party: ${partyName}`},
+        headings: {"en": "New Party Added"}
+    };
+
+    fetch("https://onesignal.com/api/v1/notifications", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Basic ${oneSignalApiKey}`
+        },
+        body: JSON.stringify(notificationData)
+    })
+    .then(response => response.json())
+    .then(data => console.log("OneSignal API response:", data))
+    .catch(error => console.error("Error sending OneSignal notification:", error));
+}
+    partySearch.addEventListener('focus', () => showParties());
+    partySearch.addEventListener('input', () => showParties(partySearch.value));
+
+    document.addEventListener('click', function(e) {
+        if (e.target !== partySearch && !partyList.contains(e.target)) {
+            partyList.style.display = 'none';
+        }
+    });
+   
+
+    document.querySelector('a[data-section="activityLogs"]').addEventListener('click', loadActivityLogs);
+
+     // User Management
+     document.getElementById('usersBtn').addEventListener('click', function() {
+        showSection('users');
+        loadUsers();
+    });
+    
+    document.getElementById('approvalRequestsBtn').addEventListener('click', function() {
+        showSection('approvalRequests');
+        loadApprovalRequests();
+    });
+    
+    function loadUsers() {
+    const usersBody = document.getElementById('usersBody');
+    usersBody.innerHTML = '';
+    
+    firebase.database().ref('users').once('value', (snapshot) => {
+        const users = snapshot.val();
+        if (users) {
+            Object.entries(users).forEach(([key, value]) => {
+                const row = document.createElement('tr');
+                const isCurrentUser = value.toLowerCase() === username.toLowerCase();
+                row.innerHTML = `
+                    <td>${value}${isCurrentUser ? ' (me)' : ''}</td>
+                    <td>
+                        ${isCurrentUser ? '' : `<button class="btn btn-sm btn-danger delete-user" data-key="${key}">Delete</button>`}
+                    </td>
+                `;
+                usersBody.appendChild(row);
+            });
+            
+            // Add event listeners for delete buttons
+            document.querySelectorAll('.delete-user').forEach(button => {
+                button.addEventListener('click', function() {
+                    const key = this.getAttribute('data-key');
+                    deleteUser(key);
+                });
+            });
+        }
+    });
+}
+    
+    function deleteUser(key) {
+        const password = prompt('Enter password to delete user:');
+        if (password === '9284494154') {
+            firebase.database().ref('users').child(key).once('value', (snapshot) => {
+                const deletedUsername = snapshot.val();
+                firebase.database().ref('users').child(key).remove().then(() => {
+                    loadUsers();
+                    logActivity('Deleted user', deletedUsername);
+                    
+                    // If the deleted user is the current user, clear localStorage and reload
+                    if (deletedUsername === username) {
+                        localStorage.removeItem('hcUsername');
+                        location.reload();
+                    }
+                }).catch(error => {
+                    console.error("Error deleting user:", error);
+                });
+            });
+        } else {
+            alert('Incorrect password');
+        }
+    }
+    
+    function loadApprovalRequests() {
+        const approvalRequestsBody = document.getElementById('approvalRequestsBody');
+        approvalRequestsBody.innerHTML = '';
+        
+        firebase.database().ref('approvalRequests').once('value', (snapshot) => {
+            const requests = snapshot.val();
+            if (requests) {
+                Object.entries(requests).forEach(([key, value]) => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${value}</td>
+                        <td>
+                            <button class="btn btn-sm btn-success approve-user" data-key="${key}">Approve</button>
+                            <button class="btn btn-sm btn-danger reject-user" data-key="${key}">Reject</button>
+                        </td>
+                    `;
+                    approvalRequestsBody.appendChild(row);
+                });
+                
+                // Add event listeners for approve and reject buttons
+                document.querySelectorAll('.approve-user, .reject-user').forEach(button => {
+                    button.addEventListener('click', function() {
+                        const key = this.getAttribute('data-key');
+                        const action = this.classList.contains('approve-user') ? 'approve' : 'reject';
+                        handleApprovalRequest(key, action);
+                    });
+                });
+            }
+        });
+    }
+    
+    function handleApprovalRequest(key, action) {
+    const password = prompt('Enter password to ' + action + ' user:');
+    if (password === '9284494154') {
+        if (action === 'approve') {
+            firebase.database().ref('approvalRequests').child(key).once('value', (snapshot) => {
+                const username = snapshot.val();
+                checkDuplicateUsername(username).then(isDuplicate => {
+                    if (isDuplicate) {
+                        alert('This username already exists. The approval request will be rejected.');
+                        firebase.database().ref('approvalRequests').child(key).remove();
+                        loadApprovalRequests();
+                        logActivity('Rejected duplicate username', username);
+                    } else {
+                        firebase.database().ref('users').push(username).then(() => {
+                            firebase.database().ref('approvalRequests').child(key).remove();
+                            loadApprovalRequests();
+                            logActivity('Approved user', username);
+                        });
+                    }
+                });
+            });
+        } else {
+            firebase.database().ref('approvalRequests').child(key).remove().then(() => {
+                loadApprovalRequests();
+                logActivity('Rejected user', key);
+            });
+        }
+    } else {
+        alert('Incorrect password');
+    }
+}
+});
+//slidng
+       document.addEventListener('DOMContentLoaded', function() {
+    const slideMenu = document.getElementById('slideMenu');
+    const menuToggle = document.getElementById('menuToggle');
+    const closeBtn = document.querySelector('.close-btn');
+
+    function showSection(sectionId) {
+        document.querySelectorAll('.section').forEach(section => section.classList.remove('active'));
+        document.getElementById(sectionId).classList.add('active');
+    }
+
+    menuToggle.addEventListener('click', function() {
+        slideMenu.style.width = '250px';
+    });
+
+    closeBtn.addEventListener('click', function() {
+        slideMenu.style.width = '0';
+    });
+
+    slideMenu.querySelectorAll('a[data-section]').forEach(link => {
+        link.addEventListener('click', function(e) {
+            e.preventDefault();
+            const sectionId = this.getAttribute('data-section');
+            showSection(sectionId);
+            slideMenu.style.width = '0';
+        });
+    });
+
+    menuToggle.addEventListener('click', function() {
+    slideMenu.style.width = '250px';
+    document.querySelectorAll('.section').forEach(section => section.classList.remove('active'));
+});
+
+    document.querySelectorAll('.nav-link').forEach(link => {
+        link.addEventListener('click', function(e) {
+            e.preventDefault();
+            const sectionId = this.getAttribute('data-section');
+            showSection(sectionId);
+        });
+    });
+
+    window.addEventListener('click', function(event) {
+        if (!slideMenu.contains(event.target) && event.target !== menuToggle) {
+            slideMenu.style.width = '0';
+        }
+    });
+     // Add event listeners for Master and Party Master buttons
+     document.getElementById('partyMasterBtn').addEventListener('click', function() {
+        showSection('partyMaster');
+        loadPartyMaster();
+    });
+
+    document.getElementById('itemMasterBtn').addEventListener('click', function() {
+        // Implement Item Master functionality here
+        alert('Item Master functionality not implemented yet');
+    });
+
+    function loadPartyMaster() {
+        const partyMasterBody = document.getElementById('partyMasterBody');
+        partyMasterBody.innerHTML = '';
+
+        firebase.database().ref('parties').once('value', (snapshot) => {
+            const firebaseParties = snapshot.val();
+            if (firebaseParties) {
+                firebaseParties.forEach((party, index) => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${party}</td>
+                        <td>
+                            <button class="btn btn-sm btn-primary edit-party" data-index="${index}">Edit</button>
+                            <button class="btn btn-sm btn-danger delete-party" data-index="${index}">Delete</button>
+                        </td>
+                    `;
+                    partyMasterBody.appendChild(row);
+                });
+
+                // Add event listeners for edit and delete buttons
+                document.querySelectorAll('.edit-party').forEach(button => {
+                    button.addEventListener('click', function() {
+                        const index = this.getAttribute('data-index');
+                        editParty(index);
+                    });
+                });
+
+                document.querySelectorAll('.delete-party').forEach(button => {
+                    button.addEventListener('click', function() {
+                        const index = this.getAttribute('data-index');
+                        deleteParty(index);
+                    });
+                });
+            }
+        });
+    }
+
+   // Function to edit a party
+function editParty(index) {
+    firebase.database().ref('parties').once('value', (snapshot) => {
+        const parties = snapshot.val();
+        const oldName = parties[index];
+        const newName = prompt('Enter new party name:', oldName);
+        if (newName && newName !== oldName) {
+            parties[index] = newName;
+            firebase.database().ref('parties').set(parties).then(() => {
+                // Update the party name in all orders
+                firebase.database().ref('orders').once('value', (orderSnapshot) => {
+                    const orders = orderSnapshot.val();
+                    if (orders) {
+                        Object.keys(orders).forEach((key) => {
+                            if (orders[key].party === oldName) {
+                                firebase.database().ref('orders').child(key).update({ party: newName });
+                            }
+                        });
+                    }
+                }).then(() => {
+                    loadPartyMaster();
+                    logActivity('Edited party name', username, oldName, newName);
+                });
+            }).catch(error => {
+                console.error("Error updating party:", error);
+            });
+        }
+    });
+}
+
+
+// Function to delete a party
+function deleteParty(index) {
+    if (confirm('Are you sure you want to delete this party?')) {
+        firebase.database().ref('parties').once('value', (snapshot) => {
+            const parties = snapshot.val();
+            const deletedParty = parties[index];
+            parties.splice(index, 1);
+            
+            // Remove the party from the database
+            firebase.database().ref('parties').set(parties).then(() => {
+                // Remove the party from all orders
+                firebase.database().ref('orders').once('value', (orderSnapshot) => {
+                    const orders = orderSnapshot.val();
+                    if (orders) {
+                        Object.keys(orders).forEach((key) => {
+                            if (orders[key].party === deletedParty) {
+                                firebase.database().ref('orders').child(key).remove();
+                            }
+                        });
+                    }
+                }).then(() => {
+                    loadPartyMaster();
+                    logActivity('Deleted party', username, null, deletedParty);
+                });
+            }).catch(error => {
+                console.error("Error deleting party:", error);
+            });
+        });
+    }
+}
+
+ // Updated logActivity function
+function logActivity(action, username, oldValue = null, newValue = null) {
+    const now = new Date();
+    const activityLog = {
+        action: action,
+        username: username,
+        timestamp: now.toISOString(),
+        date: now.toLocaleDateString(),
+        time: now.toLocaleTimeString(),
+        oldValue: oldValue,
+        newValue: newValue
+    };
+    firebase.database().ref('activityLogs').push(activityLog);
+}
+
+});
+
+        document.querySelectorAll('.nav-link').forEach(link => {
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+                document.querySelectorAll('.section').forEach(section => section.classList.remove('active'));
+                document.querySelectorAll('.nav-link').forEach(navLink => navLink.classList.remove('active'));
+                const sectionId = this.getAttribute('data-section');
+                document.getElementById(sectionId).classList.add('active');
+                this.classList.add('active');
+            });
+        });
+//ACTIVITY LOG
+document.querySelector('a[data-section="activityLogs"]').addEventListener('click', loadActivityLogs);
+function loadActivityLogs() {
+    const activityLogsSection = document.getElementById('activityLogs');
+    const logList = document.createElement('ul');
+    logList.className = 'list-group';
+
+    firebase.database().ref('activityLogs').orderByChild('timestamp').limitToLast(50).on('value', (snapshot) => {
+        logList.innerHTML = ''; // Clear existing logs
+        const logs = [];
+        snapshot.forEach((childSnapshot) => {
+            logs.push(childSnapshot.val());
+        });
+        logs.reverse().forEach((log) => {
+            const listItem = document.createElement('li');
+            listItem.className = 'list-group-item';
+            
+            const dateTime = new Date(log.timestamp);
+            const formattedDateTime = dateTime.toLocaleString('en-US', {
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit',
+                hour12: true
+            });
+
+            let logMessage = `${formattedDateTime}: ${log.username}: `;
+            
+            switch(log.action) {
+                case 'Deleted party':
+                    logMessage += `Deleted party "${log.newValue}"`;
+                    break;
+                case 'Edited party name':
+                    logMessage += `Edited party name from "${log.oldValue}" to "${log.newValue}"`;
+                    break;
+                case 'Created new party':
+                    logMessage += `Created new party "${log.newValue}"`;
+                    break;
+                default:
+                    logMessage += `${log.action}`;
+            }
+
+            listItem.textContent = logMessage;
+            logList.appendChild(listItem);
+        });
+    });
+
+    activityLogsSection.innerHTML = ''; // Clear previous content
+    activityLogsSection.appendChild(logList);
+}
+//hc text animation
+const hcText = document.querySelector('.hc-text');
+let gradientAngle = 0;
+
+function updateGradient() {
+  gradientAngle += 1; // Adjust the speed by changing the increment
+  hcText.style.backgroundImage = `linear-gradient(${gradientAngle}deg, #8B0000, #0000FF)`;
+}
+
+setInterval(updateGradient, 50); // Update every 50 milliseconds (adjust as needed)
+        function adjustForMobileView() {
+            if (window.innerWidth <= 768) {
+                document.querySelectorAll('.table').forEach(table => {
+                    table.classList.add('table-responsive');
+                });
+            } else {
+                document.querySelectorAll('.table').forEach(table => {
+                    table.classList.remove('table-responsive');
+                });
+            }
+        }
+
+        
+        window.addEventListener('resize', adjustForMobileView);
+        adjustForMobileView();
+    </script>
+</body>
+</html>

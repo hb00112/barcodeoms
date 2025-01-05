@@ -96,117 +96,97 @@ function toInitializeEventListeners() {
 }
 
 // Scanner Management
-function toInitializeScanner() {
-    if (typeof Quagga === 'undefined') {
-        alert("Scanner library not loaded. Please ensure Quagga.js is properly included.");
-        return;
-    }
+let strichScanner = null;
 
+// Initialize Scanner
+function toInitializeScanner() {
     toElements.scannerContainer.style.display = 'block';
     toElements.manualBarcodeInput.style.display = 'none';
-    
-    if (!isQuaggaInitialized) {
-        Quagga.init({
-            inputStream: {
-                name: "Live",
-                type: "LiveStream",
+
+    if (!strichScanner) {
+        // Create scanner instance
+        strichScanner = new Strich.Scanner({
+            video: {
                 target: document.querySelector("#toScanner"),
                 constraints: {
-                    facingMode: "environment",
-                    width: 1280,
-                    height: 720,
-                    aspectRatio: { min: 1, max: 2 }
-                },
-                area: { // Only read barcodes in center of view
-                    top: "25%",
-                    right: "10%",
-                    left: "10%",
-                    bottom: "25%"
+                    width: 720,
+                    height: 1280,
+                    facingMode: "environment"
                 }
             },
+            scanning: {
+                active: true,
+                continuous: true
+            },
             decoder: {
-                readers: [
-                    "ean_reader",
-                    "ean_8_reader",
-                    "ean_13_reader",
-                    "upc_reader",
-                    "upc_e_reader"
-                ],
-                multiple: false,
-                debug: {
-                    drawBoundingBox: true,
-                    showPattern: true
-                },
-                locate: true
+                reader: ["ean", "ean_8", "ean_13", "upc", "upc_e"],
+                stable: true,
+                attempts: 3
             },
-            locator: {
-                patchSize: "medium",
-                halfSample: true
-            },
-            numOfWorkers: navigator.hardwareConcurrency || 4,
-            frequency: 10,
-            tracking: true
-        }, function(err) {
-            if (err) {
-                console.error("Scanner initialization error:", err);
-                alert("Error initializing scanner. Please try manual entry.");
-                return;
+            guides: {
+                opacity: 0.5,
+                style: "line",
+                color: "#00FF00",
+                top: "35%",
+                height: "30%",
+                width: "80%",
+                left: "10%"
             }
-            isQuaggaInitialized = true;
-            Quagga.start();
         });
 
-        // Enhanced barcode detection with confidence threshold
-        Quagga.onDetected((result) => {
-            const code = result.codeResult.code;
-            const confidence = result.codeResult.confidence;
+        // Handle successful scans
+        strichScanner.onScanned = (result) => {
             const currentTime = Date.now();
             
             // Implement debouncing (wait 1 second between scans)
             if (currentTime - lastScannedTime < 1000) {
                 return;
             }
-            
-            // Check confidence threshold and code validity
-            if (confidence > 0.7 && code && code.length >= 8) {
+
+            // Process valid barcodes
+            if (result.value && result.value.length >= 8) {
                 // Prevent duplicate scans
-                if (code !== lastScannedCode) {
-                    lastScannedCode = code;
+                if (result.value !== lastScannedCode) {
+                    lastScannedCode = result.value;
                     lastScannedTime = currentTime;
-                    toProcessBarcode(code);
+                    toProcessBarcode(result.value);
                 }
             }
-        });
+        };
 
-        // Add processing feedback
-        Quagga.onProcessed((result) => {
-            const drawingCtx = Quagga.canvas.ctx.overlay;
-            const drawingCanvas = Quagga.canvas.dom.overlay;
+        // Handle scanning errors
+        strichScanner.onError = (error) => {
+            console.error("Scanner error:", error);
+            alert("Error with scanner. Please try manual entry.");
+            toHideScanner();
+        };
 
-            if (result) {
-                if (result.boxes) {
-                    drawingCtx.clearRect(0, 0, drawingCanvas.width, drawingCanvas.height);
-                    result.boxes.filter(box => box !== result.box).forEach(box => {
-                        drawingCtx.strokeStyle = "green";
-                        drawingCtx.strokeRect(box.x, box.y, box.width, box.height);
-                    });
-                }
-
-                if (result.box) {
-                    drawingCtx.strokeStyle = "blue";
-                    drawingCtx.strokeRect(
-                        result.box.x, 
-                        result.box.y, 
-                        result.box.width, 
-                        result.box.height
-                    );
-                }
-            }
+        strichScanner.start().catch(error => {
+            console.error("Failed to start scanner:", error);
+            alert("Could not start scanner. Please try manual entry.");
+            toHideScanner();
         });
     } else {
-        Quagga.start();
+        strichScanner.start();
     }
 }
+
+// Hide Scanner
+function toHideScanner() {
+    toElements.scannerContainer.style.display = 'none';
+    if (strichScanner) {
+        strichScanner.stop();
+    }
+}
+
+// Cleanup Scanner
+function toCleanupScanner() {
+    if (strichScanner) {
+        strichScanner.destroy();
+        strichScanner = null;
+    }
+}
+
 
 function toHandleBarcodeDetection(result) {
     const barcode = result.codeResult.code;
@@ -219,19 +199,7 @@ function toHandleBarcodeDetection(result) {
     }
     toProcessBarcode(barcode);
 }
-function toHideScanner() {
-    toElements.scannerContainer.style.display = 'none';
-    if (isQuaggaInitialized) {
-        Quagga.stop();
-    }
-}
 
-function toCleanupScanner() {
-    if (isQuaggaInitialized) {
-        Quagga.stop();
-        isQuaggaInitialized = false;
-    }
-}
 
 // Manual Entry
 function toShowManualInput() {

@@ -26,14 +26,20 @@
 }
 
 .to-scanner-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: black;
+    z-index: 1000;
     display: none;
-    margin: 1rem 0;
 }
 
 #toScanner {
     width: 100%;
     max-width: 640px;
-    margin: 0 auto;
+    object-fit: cover;
 }
 
 .to-barcode-input {

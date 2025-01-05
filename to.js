@@ -133,9 +133,15 @@ function toInitializeScanner() {
 
 function toHandleBarcodeDetection(result) {
     const barcode = result.codeResult.code;
+    if (toBarcodeDb[barcode]) {
+        // If it's a match, stop scanning temporarily
+        if (isQuaggaInitialized) {
+            Quagga.stop();
+            isQuaggaInitialized = false;
+        }
+    }
     toProcessBarcode(barcode);
 }
-
 function toHideScanner() {
     toElements.scannerContainer.style.display = 'none';
     if (isQuaggaInitialized) {
@@ -168,19 +174,24 @@ function toHandleManualBarcode(event) {
 }
 
 // Barcode Processing
+// Barcode Processing
 function toProcessBarcode(barcode) {
     if (toBarcodeDb[barcode]) {
         const product = toBarcodeDb[barcode];
-        const mrp = prompt(`Product found: ${product.itemName}\nMRP: ${product.mrp}\nEnter new MRP or press OK to confirm:`, product.mrp);
+        console.log('Scan matched:', product.itemName); // Log the match
         
-        if (mrp !== null) {
+        // Just confirm the MRP
+        const confirmed = confirm(`Product: ${product.itemName}\nMRP: ₹${product.mrp}\n\nClick OK to add to cart or Cancel to skip`);
+        
+        if (confirmed) {
             toAddToCart({
                 barcode,
-                ...product,
-                mrp: parseFloat(mrp) || product.mrp
+                ...product
             });
         }
     } else {
+        // For unmatched barcodes, show the product modal to enter details
+        console.log('Scan not found in database:', barcode);
         toShowProductModal();
     }
 }

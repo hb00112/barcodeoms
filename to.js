@@ -6,7 +6,7 @@ const toBarcodeDb = {
         size: "L",
         mrp: 939.00
     },
-    "8902625622952": {
+    "8902625567444": {
         itemName: "E040-ATHL-B-LEGGING-P1",
         color: "AABC",
         size: "S",
@@ -36,6 +36,9 @@ const toElements = {
 
 // Cart State
 let toCartItems = [];
+
+let lastScannedCode = null;
+let lastScannedTime = 0;
 
 
 
@@ -109,15 +112,43 @@ function toInitializeScanner() {
                 type: "LiveStream",
                 target: document.querySelector("#toScanner"),
                 constraints: {
-                    facingMode: "environment"
+                    facingMode: "environment",
+                    width: 1280,
+                    height: 720,
+                    aspectRatio: { min: 1, max: 2 }
                 },
+                area: { // Only read barcodes in center of view
+                    top: "25%",
+                    right: "10%",
+                    left: "10%",
+                    bottom: "25%"
+                }
             },
             decoder: {
-                readers: ["ean_reader", "ean_8_reader"]
-            }
+                readers: [
+                    "ean_reader",
+                    "ean_8_reader",
+                    "ean_13_reader",
+                    "upc_reader",
+                    "upc_e_reader"
+                ],
+                multiple: false,
+                debug: {
+                    drawBoundingBox: true,
+                    showPattern: true
+                },
+                locate: true
+            },
+            locator: {
+                patchSize: "medium",
+                halfSample: true
+            },
+            numOfWorkers: navigator.hardwareConcurrency || 4,
+            frequency: 10,
+            tracking: true
         }, function(err) {
             if (err) {
-                console.error(err);
+                console.error("Scanner initialization error:", err);
                 alert("Error initializing scanner. Please try manual entry.");
                 return;
             }
@@ -125,7 +156,53 @@ function toInitializeScanner() {
             Quagga.start();
         });
 
-        Quagga.onDetected(toHandleBarcodeDetection);
+        // Enhanced barcode detection with confidence threshold
+        Quagga.onDetected((result) => {
+            const code = result.codeResult.code;
+            const confidence = result.codeResult.confidence;
+            const currentTime = Date.now();
+            
+            // Implement debouncing (wait 1 second between scans)
+            if (currentTime - lastScannedTime < 1000) {
+                return;
+            }
+            
+            // Check confidence threshold and code validity
+            if (confidence > 0.7 && code && code.length >= 8) {
+                // Prevent duplicate scans
+                if (code !== lastScannedCode) {
+                    lastScannedCode = code;
+                    lastScannedTime = currentTime;
+                    toProcessBarcode(code);
+                }
+            }
+        });
+
+        // Add processing feedback
+        Quagga.onProcessed((result) => {
+            const drawingCtx = Quagga.canvas.ctx.overlay;
+            const drawingCanvas = Quagga.canvas.dom.overlay;
+
+            if (result) {
+                if (result.boxes) {
+                    drawingCtx.clearRect(0, 0, drawingCanvas.width, drawingCanvas.height);
+                    result.boxes.filter(box => box !== result.box).forEach(box => {
+                        drawingCtx.strokeStyle = "green";
+                        drawingCtx.strokeRect(box.x, box.y, box.width, box.height);
+                    });
+                }
+
+                if (result.box) {
+                    drawingCtx.strokeStyle = "blue";
+                    drawingCtx.strokeRect(
+                        result.box.x, 
+                        result.box.y, 
+                        result.box.width, 
+                        result.box.height
+                    );
+                }
+            }
+        });
     } else {
         Quagga.start();
     }
